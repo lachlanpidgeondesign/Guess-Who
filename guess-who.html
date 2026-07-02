@@ -401,7 +401,8 @@
   function buildSampleQuiz(){
     return [
       {
-        name: "Pam Dawber",
+        name: "Jenilee Harrison",
+        hint: "Star of Dallas",
         images: ["1.avif", "2.avif", "3.avif"],
         reveal: "r1.avif",
         isSample: true
@@ -691,8 +692,12 @@
     const hintBtn = document.getElementById('hint-btn');
     hintBtn.disabled = true;
     document.getElementById('hint-btn-label').textContent = 'Hint used';
-    const firstLetter = quiz[roundIndex].name.trim().charAt(0).toUpperCase();
-    document.getElementById('hint-display').textContent = `Hint: their name starts with "${firstLetter}" (−1 point from your final score)`;
+    const round = quiz[roundIndex];
+    const customHint = round.hint && round.hint.trim();
+    const hintText = customHint
+      ? customHint
+      : `their name starts with "${round.name.trim().charAt(0).toUpperCase()}"`;
+    document.getElementById('hint-display').textContent = `Hint: ${hintText} (−1 point from your final score)`;
   });
 
   function revealAnswer(points){
