@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guess Who</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600..900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#A7A6F4;
+    --bg-deep:#918FEA;
+    --ink:#2A2470;
+    --ink-soft:rgba(42,36,112,0.68);
+    --black:#16151C;
+    --black-hover:#000000;
+    --card:#FFFFFF;
+    --mint:#7CE0B6;
+    --gold:#F4C24E;
+    --coral:#F4685F;
+    --purple:#7A69E6;
+    --success:#2FAE55;
+    --danger:#E2574C;
+    --shadow: 0 18px 40px rgba(20,17,70,0.22);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--bg);
+    background-image:radial-gradient(circle at 15% 8%, var(--bg-deep) 0%, transparent 45%),
+                      radial-gradient(circle at 90% 85%, var(--bg-deep) 0%, transparent 40%);
+    font-family:'Inter', sans-serif;
+    color:var(--ink);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{
+    width:100%;
+    max-width:420px;
+    min-height:640px;
+    display:flex;
+    flex-direction:column;
+  }
+  .screen{display:none; flex-direction:column; flex:1; animation:fadeIn .35s ease;}
+  .screen.active{display:flex;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);}}
+
+  /* ---------- START SCREEN ---------- */
+  #start-screen{align-items:center; justify-content:center; text-align:center; gap:6px; padding:20px 8px;}
+  .icon-wrap{position:relative; width:150px; height:150px; margin-bottom:8px;}
+  .title{
+    font-family:'Fraunces', serif;
+    font-weight:900;
+    font-size:56px;
+    line-height:1;
+    color:var(--ink);
+    margin:6px 0 4px;
+    letter-spacing:-0.5px;
+  }
+  .subtitle{font-size:19px; color:#151329; margin:0 0 26px; font-weight:500;}
+  .btn{
+    border:none;
+    cursor:pointer;
+    font-family:'Inter', sans-serif;
+    font-weight:600;
+    border-radius:999px;
+    transition:transform .12s ease, background .12s ease;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{
+    background:var(--black);
+    color:#fff;
+    font-size:19px;
+    padding:17px 0;
+    width:100%;
+    max-width:340px;
+  }
+  .btn-primary:hover{background:var(--black-hover);}
+  .btn-secondary{
+    background:transparent;
+    color:var(--ink);
+    font-size:15px;
+    font-weight:600;
+    padding:10px 0;
+    text-decoration:underline;
+    text-underline-offset:3px;
+  }
+  .meta{margin-top:28px; font-size:15px; color:#1c1a3a;}
+  .meta .by{display:block; font-size:14px; color:rgba(28,26,58,0.55); margin-top:2px;}
+
+  /* ---------- SHARED HEADER ---------- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:4px 2px 18px;
+  }
+  .topbar .back{
+    background:rgba(255,255,255,0.55);
+    border:none; border-radius:999px; width:38px; height:38px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    font-size:18px; color:var(--ink); font-weight:700;
+  }
+  .pill-badge{
+    background:rgba(255,255,255,0.6);
+    border-radius:999px;
+    padding:7px 16px;
+    font-weight:700;
+    font-size:14px;
+    color:var(--ink);
+  }
+
+  /* ---------- SETUP SCREEN ---------- */
+  #setup-screen h2{font-family:'Fraunces',serif; font-size:26px; margin:0 0 4px;}
+  #setup-screen .lead{font-size:14px; color:var(--ink-soft); margin:0 0 18px;}
+  .rounds-list{display:flex; flex-direction:column; gap:14px; overflow-y:auto; padding-bottom:14px; flex:1;}
+  .round-card{
+    background:var(--card);
+    border-radius:20px;
+    padding:16px;
+    box-shadow:var(--shadow);
+  }
+  .round-card h3{margin:0 0 10px; font-size:15px; font-weight:700; display:flex; align-items:center; gap:8px;}
+  .round-num{
+    width:24px; height:24px; border-radius:50%; background:var(--ink); color:#fff;
+    font-size:12px; display:flex; align-items:center; justify-content:center; font-weight:700;
+  }
+  .name-input{
+    width:100%; padding:10px 12px; border-radius:10px; border:1.5px solid #E4E2FA;
+    font-size:14px; font-family:'Inter'; margin-bottom:10px; background:#FAFAFF;
+  }
+  .name-input:focus{outline:none; border-color:var(--purple);}
+  .thumbs-row{display:flex; gap:8px; margin-bottom:6px; flex-wrap:wrap;}
+  .thumb-slot{
+    width:64px; height:64px; border-radius:12px; border:2px dashed #D6D3F5;
+    background:#F5F4FF center/cover no-repeat;
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; color:var(--ink-soft); cursor:pointer; position:relative; overflow:hidden;
+    text-align:center; font-weight:600; line-height:1.2;
+  }
+  .thumb-slot.filled{border-style:solid; border-color:var(--mint);}
+  .thumb-slot input{position:absolute; inset:0; opacity:0; cursor:pointer;}
+  .slot-label{font-size:11px; color:var(--ink-soft); margin:2px 0 8px; font-weight:600;}
+  .reveal-slot{width:64px;}
+  .setup-footer{padding-top:10px;}
+  .hint-row{font-size:12px; color:var(--ink-soft); text-align:center; margin-top:10px;}
+
+  /* ---------- PLAY SCREEN ---------- */
+  #play-screen{gap:14px;}
+  .progress-track{
+    height:8px; background:rgba(255,255,255,0.5); border-radius:999px; overflow:hidden; margin-bottom:2px;
+  }
+  .progress-fill{height:100%; background:var(--ink); border-radius:999px; transition:width .35s ease;}
+  .carousel-wrap{position:relative;}
+  .carousel{
+    display:flex; overflow-x:auto; scroll-snap-type:x mandatory;
+    border-radius:22px; box-shadow:var(--shadow);
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .carousel::-webkit-scrollbar{display:none;}
+  .carousel .slide{
+    min-width:100%; aspect-ratio:1/1; scroll-snap-align:center;
+    background:#fff center/cover no-repeat;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .carousel .slide img{width:100%; height:100%; object-fit:cover; object-position:center 15%; display:block;}
+  .car-btn{
+    position:absolute; top:50%; transform:translateY(-50%);
+    width:38px; height:38px; border-radius:50%; border:none;
+    background:rgba(22,21,28,0.55); color:#fff; font-size:16px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .car-btn.prev{left:10px;} .car-btn.next{right:10px;}
+  .dots{display:flex; justify-content:center; gap:6px; margin-top:10px;}
+  .dot{width:7px; height:7px; border-radius:50%; background:rgba(42,36,112,0.25);}
+  .dot.active{background:var(--ink); width:18px; border-radius:4px; transition:all .2s ease;}
+
+  .guess-row{display:flex; gap:8px;}
+  .guess-input{
+    flex:1; padding:15px 16px; border-radius:16px; border:none;
+    font-size:16px; font-family:'Inter'; background:var(--card); box-shadow:var(--shadow);
+  }
+  .guess-input:focus{outline:2px solid var(--purple);}
+  .guess-btn{
+    background:var(--black); color:#fff; padding:0 22px; border-radius:16px; font-size:15px;
+  }
+  .feedback{
+    min-height:26px; text-align:center; font-weight:700; font-size:15px;
+  }
+  .feedback.correct{color:var(--success);}
+  .feedback.wrong{color:var(--danger); animation:shake .35s ease;}
+  @keyframes shake{
+    0%,100%{transform:translateX(0);} 25%{transform:translateX(-6px);} 75%{transform:translateX(6px);}
+  }
+  .skip-link{text-align:center; font-size:13px; color:var(--ink-soft); text-decoration:underline; cursor:pointer; background:none; border:none; font-family:'Inter';}
+
+  .attempts-row{display:flex; align-items:center; justify-content:space-between; min-height:18px; margin-bottom:2px;}
+  .attempts-left{font-size:12px; font-weight:600; color:var(--ink-soft);}
+  .wrong-guesses{display:flex; flex-wrap:wrap; gap:6px; min-height:0;}
+  .wrong-chip{
+    display:inline-flex; align-items:center; gap:5px;
+    background:rgba(226,87,76,0.12); color:var(--danger);
+    border-radius:999px; padding:5px 10px; font-size:12.5px; font-weight:600;
+    animation:pop .2s ease;
+  }
+  .wrong-chip .x{font-size:11px;}
+  .wrong-chip .txt{text-decoration:line-through; text-decoration-thickness:1.5px;}
+
+  .reveal-panel{
+    background:var(--card); border-radius:22px; padding:18px; box-shadow:var(--shadow);
+    display:flex; flex-direction:column; align-items:center; gap:10px; animation:pop .3s ease;
+  }
+  @keyframes pop{from{transform:scale(.9); opacity:0;} to{transform:scale(1); opacity:1;}}
+  .reveal-img{width:150px; height:150px; border-radius:18px; object-fit:cover; object-position:center; box-shadow:0 8px 18px rgba(0,0,0,0.15);}
+  .reveal-name{font-family:'Fraunces',serif; font-weight:800; font-size:24px;}
+  .reveal-sub{font-size:13px; color:var(--ink-soft); margin-top:-6px;}
+
+  /* ---------- END SCREEN ---------- */
+  #end-screen{align-items:center; justify-content:center; text-align:center; gap:14px;}
+  .score-ring{
+    width:150px; height:150px; border-radius:50%; background:#fff; box-shadow:var(--shadow);
+    display:flex; align-items:center; justify-content:center; flex-direction:column;
+  }
+  .score-ring .num{font-family:'Fraunces',serif; font-weight:900; font-size:44px; line-height:1;}
+  .score-ring .den{font-size:13px; color:var(--ink-soft); font-weight:600;}
+  .end-title{font-family:'Fraunces',serif; font-weight:800; font-size:26px; margin:4px 0 0;}
+  .end-msg{font-size:14px; color:var(--ink-soft); margin:0 0 6px; max-width:280px;}
+  .end-actions{display:flex; flex-direction:column; gap:10px; width:100%; max-width:300px;}
+
+  .top-shards{position:relative;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- START SCREEN -->
+  <section id="start-screen" class="screen active">
+    <div class="icon-wrap">
+      <svg viewBox="0 0 150 150" width="150" height="150">
+        <polygon points="14,46 30,34 24,62" fill="var(--mint)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
+        <polygon points="128,32 142,42 122,50" fill="var(--gold)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
+        <polygon points="118,108 134,118 112,124" fill="var(--purple)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
+        <rect x="38" y="22" width="74" height="98" rx="20" fill="#fff" stroke="var(--ink)" stroke-width="6"/>
+        <circle cx="75" cy="58" r="19" fill="none" stroke="var(--ink)" stroke-width="6"/>
+        <path d="M50 100 q25 -28 50 0" fill="none" stroke="var(--ink)" stroke-width="6" stroke-linecap="round"/>
+        <text x="75" y="66" font-family="Fraunces, serif" font-size="24" font-weight="900" text-anchor="middle" fill="var(--ink)">?</text>
+      </svg>
+    </div>
+    <h1 class="title">Guess Who</h1>
+    <p class="subtitle">Spot the face behind the clues</p>
+    <button class="btn btn-primary" id="play-btn" style="max-width:340px;">Play</button>
+    <button class="btn btn-secondary" id="setup-btn">Create your own quiz</button>
+    <div class="meta">
+      <span id="date-line">Thursday July 2nd 2026</span>
+    </div>
+  </section>
+
+  <!-- SETUP SCREEN -->
+  <section id="setup-screen" class="screen">
+    <div class="topbar">
+      <button class="back" id="setup-back">←</button>
+      <span class="pill-badge">Create quiz</span>
+      <span style="width:38px;"></span>
+    </div>
+    <h2 id="rounds-heading">1 round</h2>
+    <p class="lead">Add 3 clue photos and one reveal photo per round, then type who it is.</p>
+    <div class="rounds-list" id="rounds-list"></div>
+    <button class="btn btn-secondary" id="add-round-btn" style="align-self:center;">+ Add another round</button>
+    <div class="setup-footer">
+      <button class="btn btn-primary" id="save-quiz-btn">Save &amp; play</button>
+      <p class="hint-row">Only the name is required — clue photos fall back to a placeholder if left empty.</p>
+    </div>
+  </section>
+
+  <!-- PLAY SCREEN -->
+  <section id="play-screen" class="screen">
+    <div class="topbar">
+      <button class="back" id="play-back">←</button>
+      <span class="pill-badge" id="round-label">Round 1/5</span>
+      <span class="pill-badge" id="score-label">Score 0</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+
+    <div id="question-block">
+      <div class="carousel-wrap">
+        <div class="carousel" id="carousel"></div>
+        <button class="car-btn prev" id="prev-btn">‹</button>
+        <button class="car-btn next" id="next-btn">›</button>
+      </div>
+      <div class="dots" id="dots"></div>
+      <div style="height:14px;"></div>
+      <div class="attempts-row">
+        <div class="wrong-guesses" id="wrong-guesses"></div>
+        <span class="attempts-left" id="attempts-left">3 guesses left</span>
+      </div>
+      <div style="height:6px;"></div>
+      <div class="guess-row">
+        <input type="text" class="guess-input" id="guess-input" placeholder="Who is it?" autocomplete="off">
+        <button class="btn guess-btn" id="guess-btn">Guess</button>
+      </div>
+      <div style="height:8px;"></div>
+      <div class="feedback" id="feedback"></div>
+      <button class="skip-link" id="skip-btn">Give up</button>
+    </div>
+
+    <div id="reveal-block" style="display:none;">
+      <div class="reveal-panel">
+        <img class="reveal-img" id="reveal-img" src="" alt="">
+        <div class="reveal-name" id="reveal-name"></div>
+        <div class="reveal-sub" id="reveal-sub"></div>
+        <button class="btn btn-primary" id="next-round-btn">Next round →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- END SCREEN -->
+  <section id="end-screen" class="screen">
+    <div class="score-ring">
+      <div class="num" id="final-score">0</div>
+      <div class="den">points</div>
+    </div>
+    <div class="end-title" id="end-title">Nice work!</div>
+    <p class="end-msg" id="end-msg">You made it through the whole quiz.</p>
+    <div class="end-actions">
+      <button class="btn btn-primary" id="play-again-btn">Play again</button>
+      <button class="btn btn-secondary" id="edit-quiz-btn">Edit this quiz</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  const MAX_ROUNDS = 10;
+  const MAX_ATTEMPTS = 3;
+  const NAMES_SAMPLE = ["Jordan","Amara","Leo","Priya","Marcus","Nadia","Theo","Ines","Kofi","Wren"];
+  const HUES = [265, 340, 30, 165, 205, 350, 95, 220, 15, 300];
+
+  // ---------- sample placeholder image generator ----------
+  function faceSVG(hue, mode){
+    const skin = `hsl(${hue}, 70%, 88%)`;
+    const hair = `hsl(${hue}, 55%, 40%)`;
+    const dark = "#2A2470";
+    let inner = "";
+    if(mode === "eyes"){
+      inner = `<rect width="200" height="200" fill="${skin}"/>
+        <circle cx="70" cy="95" r="12" fill="${dark}"/>
+        <circle cx="130" cy="95" r="12" fill="${dark}"/>`;
+    } else if(mode === "hair"){
+      inner = `<rect width="200" height="200" fill="${hair}"/>
+        <path d="M0 60 Q100 -10 200 60 L200 0 L0 0 Z" fill="${dark}" opacity="0.25"/>`;
+    } else if(mode === "silhouette"){
+      inner = `<rect width="200" height="200" fill="#EFEEFE"/>
+        <circle cx="100" cy="80" r="45" fill="${dark}" opacity="0.85"/>
+        <path d="M30 200 Q100 120 170 200 Z" fill="${dark}" opacity="0.85"/>`;
+    } else { // full reveal
+      inner = `<rect width="200" height="200" fill="${skin}"/>
+        <path d="M20 70 Q100 10 180 70 L180 20 L20 20 Z" fill="${hair}"/>
+        <circle cx="100" cy="105" r="55" fill="${skin}" stroke="${dark}" stroke-width="4"/>
+        <circle cx="80" cy="100" r="8" fill="${dark}"/>
+        <circle cx="120" cy="100" r="8" fill="${dark}"/>
+        <path d="M78 128 Q100 145 122 128" stroke="${dark}" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+    }
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">${inner}</svg>`;
+    return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+  }
+
+  function buildSampleQuiz(){
+    return [
+      {
+        name: "Pam Dawber",
+        images: ["1.avif", "2.avif", "3.avif"],
+        reveal: "r1.avif",
+        isSample: true
+      }
+    ];
+  }
+
+  // ---------- state ----------
+  const STORAGE_KEY = 'guess-who-quiz';
+  let quiz = buildSampleQuiz();
+  let setupQuiz = null;
+  let roundIndex = 0;
+  let score = 0;
+  let attemptsUsed = 0;
+  let wrongGuessList = [];
+  let slideIndex = 0;
+
+  async function loadSavedQuiz(){
+    const playBtn = document.getElementById('play-btn');
+    const originalLabel = playBtn.textContent;
+    playBtn.disabled = true;
+    playBtn.textContent = 'Loading…';
+    try{
+      const result = await window.storage.get(STORAGE_KEY, false);
+      if(result && result.value){
+        const saved = JSON.parse(result.value);
+        if(Array.isArray(saved) && saved.length){
+          quiz = saved;
+        }
+      }
+    } catch(err){
+      // no saved quiz yet, or storage unavailable — keep the sample quiz
+      console.log('No saved quiz found, using sample.', err);
+    } finally {
+      playBtn.disabled = false;
+      playBtn.textContent = originalLabel;
+    }
+  }
+  loadSavedQuiz();
+
+  async function saveQuizToStorage(quizToSave){
+    try{
+      await window.storage.set(STORAGE_KEY, JSON.stringify(quizToSave), false);
+    } catch(err){
+      console.log('Could not save quiz to storage.', err);
+    }
+  }
+
+  const screens = {
+    start: document.getElementById('start-screen'),
+    setup: document.getElementById('setup-screen'),
+    play: document.getElementById('play-screen'),
+    end: document.getElementById('end-screen'),
+  };
+  function show(name){
+    Object.values(screens).forEach(s => s.classList.remove('active'));
+    screens[name].classList.add('active');
+  }
+
+  // ---------- SETUP SCREEN ----------
+  function blankRound(){ return {name:"", images:[null,null,null], reveal:null}; }
+
+  function renderSetup(){
+    if(!setupQuiz){
+      setupQuiz = quiz.map(r => r.isSample ? blankRound() : {
+        name: r.name, images: r.images.slice(), reveal: r.reveal
+      });
+    }
+    document.getElementById('rounds-heading').textContent = `${setupQuiz.length} round${setupQuiz.length===1?'':'s'}`;
+    document.getElementById('add-round-btn').style.display = setupQuiz.length >= MAX_ROUNDS ? 'none' : '';
+    const list = document.getElementById('rounds-list');
+    list.innerHTML = "";
+    setupQuiz.forEach((round, idx) => {
+      const card = document.createElement('div');
+      card.className = 'round-card';
+      card.innerHTML = `
+        <h3><span class="round-num">${idx+1}</span> Round ${idx+1}${setupQuiz.length>1?` <button type="button" class="skip-link" data-remove="${idx}" style="margin-left:auto; color:var(--danger); text-decoration:none;">Remove</button>`:''}</h3>
+        <input class="name-input" type="text" placeholder="Their name" value="${round.name ? escapeHtml(round.name) : ''}" data-role="name" data-idx="${idx}">
+        <div class="slot-label">Clue photos (scrollable during play)</div>
+        <div class="thumbs-row" data-clues="${idx}"></div>
+        <div class="slot-label">Reveal photo (shown when guessed correctly)</div>
+        <div class="thumbs-row" data-reveal="${idx}"></div>
+      `;
+      list.appendChild(card);
+
+      const clueRow = card.querySelector(`[data-clues="${idx}"]`);
+      for(let c=0;c<3;c++){
+        clueRow.appendChild(makeThumbSlot(round.images[c], `Clue ${c+1}`, (dataUrl)=>{
+          setupQuiz[idx].images[c] = dataUrl;
+        }));
+      }
+      const revealRow = card.querySelector(`[data-reveal="${idx}"]`);
+      revealRow.appendChild(makeThumbSlot(round.reveal, "Reveal", (dataUrl)=>{
+        setupQuiz[idx].reveal = dataUrl;
+      }));
+
+      card.querySelector('[data-role="name"]').addEventListener('input', (e)=>{
+        setupQuiz[idx].name = e.target.value;
+      });
+      const removeBtn = card.querySelector('[data-remove]');
+      if(removeBtn){
+        removeBtn.addEventListener('click', ()=>{
+          setupQuiz.splice(idx, 1);
+          renderSetup();
+        });
+      }
+    });
+  }
+
+  function makeThumbSlot(currentUrl, label, onChange){
+    const slot = document.createElement('label');
+    slot.className = 'thumb-slot' + (currentUrl ? ' filled' : '');
+    if(currentUrl) slot.style.backgroundImage = `url(${currentUrl})`;
+    else slot.textContent = label;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.addEventListener('change', (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        onChange(reader.result);
+        slot.style.backgroundImage = `url(${reader.result})`;
+        slot.classList.add('filled');
+        slot.textContent = "";
+        slot.appendChild(input);
+      };
+      reader.readAsDataURL(file);
+    });
+    slot.appendChild(input);
+    return slot;
+  }
+
+  function escapeHtml(str){
+    return str.replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+  }
+
+  document.getElementById('setup-btn').addEventListener('click', ()=>{
+    renderSetup();
+    show('setup');
+  });
+  document.getElementById('setup-back').addEventListener('click', ()=> show('start'));
+  document.getElementById('add-round-btn').addEventListener('click', ()=>{
+    if(setupQuiz.length < MAX_ROUNDS){
+      setupQuiz.push(blankRound());
+      renderSetup();
+    }
+  });
+
+  document.getElementById('save-quiz-btn').addEventListener('click', ()=>{
+    const finalized = setupQuiz.map((r, i) => {
+      const name = r.name.trim() || NAMES_SAMPLE[i % NAMES_SAMPLE.length];
+      const hue = HUES[i % HUES.length];
+      const images = r.images.map((img, ci) => img || faceSVG(hue, ["eyes","hair","silhouette"][ci]));
+      const reveal = r.reveal || faceSVG(hue, "full");
+      return { name, images, reveal, isSample:false };
+    });
+    quiz = finalized;
+    saveQuizToStorage(quiz);
+    startGame();
+  });
+
+  // ---------- PLAY SCREEN ----------
+  document.getElementById('play-btn').addEventListener('click', startGame);
+  document.getElementById('play-back').addEventListener('click', ()=> show('start'));
+
+  function startGame(){
+    roundIndex = 0;
+    score = 0;
+    show('play');
+    loadRound();
+  }
+
+  function loadRound(){
+    slideIndex = 0;
+    attemptsUsed = 0;
+    wrongGuessList = [];
+    document.getElementById('question-block').style.display = '';
+    document.getElementById('reveal-block').style.display = 'none';
+    const input = document.getElementById('guess-input');
+    input.value = '';
+    input.disabled = false;
+    document.getElementById('guess-btn').disabled = false;
+    document.getElementById('skip-btn').style.display = '';
+    document.getElementById('feedback').textContent = '';
+    document.getElementById('feedback').className = 'feedback';
+    renderWrongGuesses();
+    updateAttemptsLeft();
+    document.getElementById('round-label').textContent = `Round ${roundIndex+1}/${quiz.length}`;
+    document.getElementById('score-label').textContent = `Score ${score}`;
+    document.getElementById('progress-fill').style.width = `${(roundIndex/quiz.length)*100}%`;
+
+    const round = quiz[roundIndex];
+    const carousel = document.getElementById('carousel');
+    carousel.innerHTML = round.images.map(src => `<div class="slide"><img src="${src}" alt="clue"></div>`).join('');
+    const dots = document.getElementById('dots');
+    dots.innerHTML = round.images.map((_, i) => `<div class="dot${i===0?' active':''}"></div>`).join('');
+
+    carousel.scrollTo({left:0});
+    carousel.onscroll = () => {
+      const idx = Math.round(carousel.scrollLeft / carousel.clientWidth);
+      updateDots(idx);
+    };
+  }
+
+  function updateDots(idx){
+    slideIndex = idx;
+    document.querySelectorAll('#dots .dot').forEach((d,i)=> d.classList.toggle('active', i===idx));
+  }
+
+  document.getElementById('prev-btn').addEventListener('click', ()=> scrollCarousel(-1));
+  document.getElementById('next-btn').addEventListener('click', ()=> scrollCarousel(1));
+  function scrollCarousel(dir){
+    const carousel = document.getElementById('carousel');
+    const max = quiz[roundIndex].images.length - 1;
+    const target = Math.min(max, Math.max(0, slideIndex + dir));
+    carousel.scrollTo({left: target * carousel.clientWidth, behavior:'smooth'});
+    updateDots(target);
+  }
+
+  function renderWrongGuesses(){
+    const wrap = document.getElementById('wrong-guesses');
+    wrap.innerHTML = wrongGuessList.map(g => `<span class="wrong-chip"><span class="x">✕</span><span class="txt">${escapeHtml(g)}</span></span>`).join('');
+  }
+
+  function updateAttemptsLeft(){
+    const left = MAX_ATTEMPTS - attemptsUsed;
+    document.getElementById('attempts-left').textContent = `${left} guess${left===1?'':'es'} left`;
+  }
+
+  function normalize(str){
+    return str.trim().toLowerCase().replace(/\s+/g,' ');
+  }
+
+  function submitGuess(){
+    const input = document.getElementById('guess-input');
+    const guess = input.value;
+    if(!guess.trim()) return;
+    const correct = normalize(guess) === normalize(quiz[roundIndex].name);
+    const feedback = document.getElementById('feedback');
+    if(correct){
+      attemptsUsed++;
+      const points = MAX_ATTEMPTS - attemptsUsed + 1;
+      score += points;
+      feedback.textContent = "Correct!";
+      feedback.className = 'feedback correct';
+      revealAnswer(points);
+    } else {
+      attemptsUsed++;
+      wrongGuessList.push(guess.trim());
+      renderWrongGuesses();
+      input.value = '';
+      if(attemptsUsed >= MAX_ATTEMPTS){
+        feedback.textContent = "Out of guesses";
+        feedback.className = 'feedback wrong';
+        revealAnswer(0);
+      } else {
+        updateAttemptsLeft();
+        feedback.textContent = "Not quite — try again";
+        feedback.className = 'feedback wrong';
+        void feedback.offsetWidth;
+        feedback.classList.remove('wrong');
+        void feedback.offsetWidth;
+        feedback.classList.add('wrong');
+      }
+    }
+  }
+  document.getElementById('guess-btn').addEventListener('click', submitGuess);
+  document.getElementById('guess-input').addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter') submitGuess();
+  });
+  document.getElementById('skip-btn').addEventListener('click', ()=>{
+    attemptsUsed = MAX_ATTEMPTS;
+    revealAnswer(0);
+  });
+
+  function revealAnswer(points){
+    const round = quiz[roundIndex];
+    document.getElementById('guess-input').disabled = true;
+    document.getElementById('guess-btn').disabled = true;
+    document.getElementById('skip-btn').style.display = 'none';
+    document.getElementById('question-block').style.display = 'none';
+    document.getElementById('reveal-block').style.display = '';
+    document.getElementById('reveal-img').src = round.reveal;
+    document.getElementById('reveal-name').textContent = round.name;
+    const subs = {
+      3: "Nailed it on the first guess!",
+      2: "Got it on the second guess.",
+      1: "Got it on the third guess.",
+      0: "Here's who it was."
+    };
+    document.getElementById('reveal-sub').textContent = subs[points];
+    document.getElementById('score-label').textContent = `Score ${score}`;
+  }
+
+  document.getElementById('next-round-btn').addEventListener('click', ()=>{
+    roundIndex++;
+    if(roundIndex >= quiz.length){
+      finishGame();
+    } else {
+      loadRound();
+    }
+  });
+
+  function finishGame(){
+    document.getElementById('progress-fill').style.width = '100%';
+    const maxScore = quiz.length * MAX_ATTEMPTS;
+    document.getElementById('final-score').textContent = score;
+    document.querySelector('.score-ring .den').textContent = `of ${maxScore} points`;
+    const title = document.getElementById('end-title');
+    const msg = document.getElementById('end-msg');
+    if(score === maxScore){
+      title.textContent = "Perfect score!";
+      msg.textContent = "First guess, every time.";
+    } else if(score >= maxScore * 0.6){
+      title.textContent = "Nice work!";
+      msg.textContent = "You made it through the whole quiz.";
+    } else if(score > 0){
+      title.textContent = "Quiz complete";
+      msg.textContent = "Some of those clues were tricky — play again?";
+    } else {
+      title.textContent = "Quiz complete";
+      msg.textContent = "Tough round — want another go?";
+    }
+    show('end');
+  }
+
+  document.getElementById('play-again-btn').addEventListener('click', startGame);
+  document.getElementById('edit-quiz-btn').addEventListener('click', ()=>{
+    setupQuiz = quiz.map(r => ({name:r.name, images:r.images.slice(), reveal:r.reveal}));
+    renderSetup();
+    show('setup');
+  });
+
+  // live date
+  document.getElementById('date-line').textContent = new Date().toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric', year:'numeric'});
+})();
+</script>
+</body>
+</html>
