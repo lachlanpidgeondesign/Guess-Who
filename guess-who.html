@@ -197,7 +197,31 @@
   @keyframes shake{
     0%,100%{transform:translateX(0);} 25%{transform:translateX(-6px);} 75%{transform:translateX(6px);}
   }
-  .skip-link{text-align:center; font-size:13px; color:var(--ink-soft); text-decoration:underline; cursor:pointer; background:none; border:none; font-family:'Inter';}
+  .skip-link{font-size:13px; color:var(--ink-soft); text-decoration:underline; cursor:pointer; background:none; border:none; font-family:'Inter';}
+  .skip-link:disabled{color:rgba(42,36,112,0.35); text-decoration:none; cursor:default;}
+  .round-actions{display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap;}
+  .hint-display{
+    text-align:center; font-size:13.5px; font-weight:600; color:var(--purple);
+    min-height:0; margin-bottom:2px;
+  }
+  .hint-pill{
+    display:inline-flex; align-items:center; gap:7px;
+    background:#fff; color:var(--ink);
+    border:2.5px solid var(--ink); border-radius:999px;
+    padding:9px 18px 9px 14px; font-family:'Inter'; font-weight:700; font-size:13.5px;
+    cursor:pointer; box-shadow:0 4px 0 var(--ink);
+    transition:transform .08s ease, box-shadow .08s ease, opacity .15s ease;
+  }
+  .hint-pill .bulb{
+    width:18px; height:18px; display:flex; align-items:center; justify-content:center;
+    background:var(--gold); border-radius:50%; font-size:11px; flex-shrink:0;
+  }
+  .hint-pill:active{transform:translateY(3px); box-shadow:0 1px 0 var(--ink);}
+  .hint-pill:disabled{
+    background:#F0EFFB; color:var(--ink-soft); border-color:#D6D3F5;
+    box-shadow:none; cursor:default; opacity:0.8;
+  }
+  .hint-pill:disabled .bulb{background:#D6D3F5;}
 
   .attempts-row{display:flex; align-items:center; justify-content:space-between; min-height:18px; margin-bottom:2px;}
   .attempts-left{font-size:12px; font-weight:600; color:var(--ink-soft);}
@@ -305,7 +329,11 @@
       </div>
       <div style="height:8px;"></div>
       <div class="feedback" id="feedback"></div>
-      <button class="skip-link" id="skip-btn">Give up</button>
+      <div class="hint-display" id="hint-display"></div>
+      <div class="round-actions">
+        <button class="hint-pill" id="hint-btn"><span class="bulb">💡</span><span id="hint-btn-label">Use hint · 1 left</span></button>
+        <button class="skip-link" id="skip-btn">Give up</button>
+      </div>
     </div>
 
     <div id="reveal-block" style="display:none;">
@@ -390,6 +418,7 @@
   let attemptsUsed = 0;
   let wrongGuessList = [];
   let slideIndex = 0;
+  let hintUsedThisGame = false;
 
   async function loadSavedQuiz(){
     const playBtn = document.getElementById('play-btn');
@@ -544,6 +573,7 @@
   function startGame(){
     roundIndex = 0;
     score = 0;
+    hintUsedThisGame = false;
     show('play');
     loadRound();
   }
@@ -559,8 +589,13 @@
     input.disabled = false;
     document.getElementById('guess-btn').disabled = false;
     document.getElementById('skip-btn').style.display = '';
+    document.getElementById('hint-btn').style.display = '';
     document.getElementById('feedback').textContent = '';
     document.getElementById('feedback').className = 'feedback';
+    document.getElementById('hint-display').textContent = '';
+    const hintBtn = document.getElementById('hint-btn');
+    hintBtn.disabled = hintUsedThisGame;
+    document.getElementById('hint-btn-label').textContent = hintUsedThisGame ? 'Hint used' : 'Use hint · 1 left';
     renderWrongGuesses();
     updateAttemptsLeft();
     document.getElementById('round-label').textContent = `Round ${roundIndex+1}/${quiz.length}`;
@@ -650,12 +685,22 @@
     attemptsUsed = MAX_ATTEMPTS;
     revealAnswer(0);
   });
+  document.getElementById('hint-btn').addEventListener('click', ()=>{
+    if(hintUsedThisGame) return;
+    hintUsedThisGame = true;
+    const hintBtn = document.getElementById('hint-btn');
+    hintBtn.disabled = true;
+    document.getElementById('hint-btn-label').textContent = 'Hint used';
+    const firstLetter = quiz[roundIndex].name.trim().charAt(0).toUpperCase();
+    document.getElementById('hint-display').textContent = `Hint: their name starts with "${firstLetter}" (−1 point from your final score)`;
+  });
 
   function revealAnswer(points){
     const round = quiz[roundIndex];
     document.getElementById('guess-input').disabled = true;
     document.getElementById('guess-btn').disabled = true;
     document.getElementById('skip-btn').style.display = 'none';
+    document.getElementById('hint-btn').style.display = 'none';
     document.getElementById('question-block').style.display = 'none';
     document.getElementById('reveal-block').style.display = '';
     document.getElementById('reveal-img').src = round.reveal;
@@ -682,22 +727,26 @@
   function finishGame(){
     document.getElementById('progress-fill').style.width = '100%';
     const maxScore = quiz.length * MAX_ATTEMPTS;
-    document.getElementById('final-score').textContent = score;
+    const finalScore = Math.max(0, score - (hintUsedThisGame ? 1 : 0));
+    document.getElementById('final-score').textContent = finalScore;
     document.querySelector('.score-ring .den').textContent = `of ${maxScore} points`;
     const title = document.getElementById('end-title');
     const msg = document.getElementById('end-msg');
-    if(score === maxScore){
+    if(finalScore === maxScore){
       title.textContent = "Perfect score!";
       msg.textContent = "First guess, every time.";
-    } else if(score >= maxScore * 0.6){
+    } else if(finalScore >= maxScore * 0.6){
       title.textContent = "Nice work!";
       msg.textContent = "You made it through the whole quiz.";
-    } else if(score > 0){
+    } else if(finalScore > 0){
       title.textContent = "Quiz complete";
       msg.textContent = "Some of those clues were tricky — play again?";
     } else {
       title.textContent = "Quiz complete";
       msg.textContent = "Tough round — want another go?";
+    }
+    if(hintUsedThisGame){
+      msg.textContent += " (−1 point for using a hint.)";
     }
     show('end');
   }
